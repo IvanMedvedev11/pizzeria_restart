@@ -1,15 +1,43 @@
-from tkinter import *
-from tkinter import ttk
-from tkinter import messagebox
 import re
 from datetime import datetime
 class Authorization_Root:
     def __init__(self, root):
         self.root = root
-        self.root.title("Пиццерия")
-        self.root.geometry("500x500")
+        self.root.title("Пиццерия - Заказ онлайн")
+        self.root.geometry("600x600")
+        self.root.resizable(False, False)
+        self.root.configure(bg='#f5f5f5')
 
-        # Инициализация переменных для хранения данных
+        # Настройка стилей
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+
+        # Цветовая схема
+        self.bg_color = '#f5f5f5'
+        self.primary_color = '#ff6b6b'
+        self.secondary_color = '#4ecdc4'
+        self.accent_color = '#ffbe0b'
+        self.text_color = '#333333'
+
+        # Настройка стилей для виджетов
+        self.style.configure('TButton',
+                             font=('Helvetica', 12),
+                             padding=10,
+                             background=self.primary_color,
+                             foreground='white')
+        self.style.map('TButton',
+                       background=[('active', self.secondary_color)])
+
+        self.style.configure('TLabel',
+                             font=('Helvetica', 12),
+                             background=self.bg_color,
+                             foreground=self.text_color)
+
+        self.style.configure('TEntry',
+                             font=('Helvetica', 12),
+                             padding=5)
+
+        # Инициализация переменных
         self.name_var = StringVar()
         self.last_name_var = StringVar()
         self.birthday_var = StringVar()
@@ -27,7 +55,7 @@ class Authorization_Root:
         self.Wine_int = IntVar()
         self.Hookah_int = IntVar()
         self.Cigarettes_int = IntVar()
-        # Регулярное выражение для проверки даты
+
         self.date_pattern = r'(?<!\d)(?:0?[1-9]|[12][0-9]|3[01])-(?:0?[1-9]|1[0-2])-(?:19[0-9][0-9]|20[01][0-9])(?!\d)'
 
         self.Root_ui()
@@ -52,7 +80,7 @@ class Authorization_Root:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.btn_Authorization = Button(self.root, text="Авторизация", command=self.Authorization)
+        self.btn_Authorization = ttk.Button(self.root, text="Авторизация", command=self.Authorization, style='TButton')
         self.btn_Authorization.place(x=200, y=100)
 
     def Authorization(self):
@@ -71,7 +99,7 @@ class Authorization_Root:
         self.birthday_entry = ttk.Entry(self.root, textvariable=self.birthday_var)
         self.birthday_entry.place(x=220, y=260)
 
-        self.btn_Confirm = Button(self.root, text="Подтвердить", command=self.validate_and_continue)
+        self.btn_Confirm = ttk.Button(self.root, text="Подтвердить", command=self.validate_and_continue, style='TButton')
         self.btn_Confirm.place(x=230, y=290)
 
     def validate_and_continue(self):
@@ -131,14 +159,14 @@ class Authorization_Root:
 
         Label(self.root, text="Выберите тип пиццы:").place(x=200, y=50)
 
-        self.btn_pizza = Button(self.root, text="Готовая пицца", command=self.Pizza_choice)
+        self.btn_pizza = ttk.Button(self.root, text="Готовая пицца", command=self.Pizza_choice, style='TButton')
         self.btn_pizza.place(x=200, y=100)
 
-        self.btn_ingredient = Button(self.root, text="Кастомная пицца", command=self.Ingredient_choice)
+        self.btn_ingredient = ttk.Button(self.root, text="Кастомная пицца", command=self.Ingredient_choice, style='TButton')
         self.btn_ingredient.place(x=200, y=150)
-        self.btn_18 = Button(self.root, text="Взрослые приколюшки", command=self.is_over_18)
+        self.btn_18 = ttk.Button(self.root, text="Взрослые приколюшки", command=self.is_over_18, style='TButton')
         self.btn_18.place(x=200, y=300)
-        self.btn_return = Button(self.root, text="Завершить заказ", command=self.saved)
+        self.btn_return = ttk.Button(self.root, text="Завершить заказ", command=self.saved, style='TButton')
         self.btn_return.place(x=200, y=400)
 
     def Pizza_choice(self):
@@ -146,7 +174,8 @@ class Authorization_Root:
             widget.destroy()
 
         Label(self.root, text="Выберите готовую пиццу:").place(x=200, y=50)
-
+        self.btn_Confirm3 = ttk.Button(self.root, text="Подтвердить", command=self.Choice,style='TButton')
+        self.btn_Confirm3.place(x=400, y=250)
     def Ingredient_choice(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -183,11 +212,11 @@ class Authorization_Root:
         self.Olives_Entry = ttk.Entry(self.root, textvariable=self.Olives_int)
         self.Olives_Entry.place(x=200, y=450)
 
-        Label(self.root, text="Колбаса").place(x=100, y=470)
+        Label(self.root, text="Колбаса").place(x=100, y=500)
         self.Sausage_Entry = ttk.Entry(self.root, textvariable=self.Sausage_int)
-        self.Sausage_Entry.place(x=200, y=470)
+        self.Sausage_Entry.place(x=200, y=500)
 
-        self.btn_Confirm1 = Button(self.root, text="Подтвердить", command= self.Choice)
+        self.btn_Confirm1 = ttk.Button(self.root, text="Подтвердить", command= self.Choice, style='TButton')
         self.btn_Confirm1.place(x=400, y=250)
     def Adult_menu(self):
         for widget in self.root.winfo_children():
@@ -213,7 +242,7 @@ class Authorization_Root:
         self.Cigarettes_Entry = ttk.Entry(self.root, textvariable=self.Cigarettes_int)
         self.Cigarettes_Entry.place(x=200, y=300)
 
-        self.btn_Confirm2 = Button(self.root, text="Подтвердить", command= self.Choice)
+        self.btn_Confirm2 = ttk.Button(self.root, text="Подтвердить", command= self.Choice, style='TButton')
         self.btn_Confirm2.place(x=400, y=250)
 root = Tk()
 app = Authorization_Root(root)
