@@ -3,7 +3,6 @@ from tkinter import ttk
 from tkinter import messagebox
 import re
 
-
 class Authorization_Root:
     def __init__(self, root):
         self.root = root
@@ -15,6 +14,14 @@ class Authorization_Root:
         self.last_name_var = StringVar()
         self.birthday_var = StringVar()
         self.Chees_int = IntVar()
+        self.Ketchup_int = IntVar()
+        self.Mayonnaise_int = IntVar()
+        self.Cheese_sauce_int = IntVar()
+        self.Pepperoni_int = IntVar()
+        self.Mushrooms_int = IntVar()
+        self.Tomatoes_int = IntVar()
+        self.Olives_int = IntVar()
+        self.Sausage_int = IntVar()
         # Регулярное выражение для проверки даты
         self.date_pattern = r'(?<!\d)(?:0?[1-9]|[12][0-9]|3[01])-(?:0?[1-9]|1[0-2])-(?:19[0-9][0-9]|20[01][0-9])(?!\d)'
 
@@ -60,8 +67,33 @@ class Authorization_Root:
         last_name = self.last_name_var.get()
         birthday = self.birthday_var.get()
 
+        # Собираем только те ингредиенты, которые больше 0
+        selected_ingredients = {}
+
+        if self.Chees_int.get() > 0:
+            selected_ingredients["Сыр"] = self.Chees_int.get()
+        if self.Ketchup_int.get() > 0:
+            selected_ingredients["Кетчуп"] = self.Ketchup_int.get()
+        if self.Mayonnaise_int.get() > 0:
+            selected_ingredients["Майонез"] = self.Mayonnaise_int.get()
+        if self.Cheese_sauce_int.get() > 0:
+            selected_ingredients["Сырный соус"] = self.Cheese_sauce_int.get()
+        if self.Pepperoni_int.get() > 0:
+            selected_ingredients["Пепперони"] = self.Pepperoni_int.get()
+        if self.Mushrooms_int.get() > 0:
+            selected_ingredients["Грибы"] = self.Mushrooms_int.get()
+        if self.Tomatoes_int.get() > 0:
+            selected_ingredients["Помидоры"] = self.Tomatoes_int.get()
+        if self.Olives_int.get() > 0:
+            selected_ingredients["Оливки"] = self.Olives_int.get()
+        if self.Sausage_int.get() > 0:
+            selected_ingredients["Колбаса"] = self.Sausage_int.get()
+
         print(f"Имя: {name}, Фамилия: {last_name}, Дата рождения: {birthday}")
-        return name, last_name, birthday
+        print("Выбранные ингредиенты:", selected_ingredients)
+        self.Choice()
+
+        return name, last_name, birthday, selected_ingredients
 
     def Choice(self):
         for widget in self.root.winfo_children():
@@ -74,7 +106,8 @@ class Authorization_Root:
 
         self.btn_ingredient = Button(self.root, text="Кастомная пицца", command=self.Ingredient_choice)
         self.btn_ingredient.place(x=200, y=150)
-
+        self.btn_return = Button(self.root, text="Завершить заказ", command=self.Root_ui)
+        self.btn_return.place(x=200, y=400)
     def Pizza_choice(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -90,38 +123,39 @@ class Authorization_Root:
         self.Chees_Entry.place(x=200, y=100)
 
         Label(self.root, text="Кетчуп").place(x=100, y=150)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=150)
+        self.Ketchup_Entry = ttk.Entry(self.root, textvariable=self.Ketchup_int)
+        self.Ketchup_Entry.place(x=200, y=150)
 
         Label(self.root, text="майонез").place(x=100, y=200)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=200)
+        self.Mayonnaise_Entry = ttk.Entry(self.root, textvariable=self.Mayonnaise_int)
+        self.Mayonnaise_Entry.place(x=200, y=200)
 
         Label(self.root, text="Сырный соус").place(x=100, y=250)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=250)
+        self.Cheese_sauce_Entry = ttk.Entry(self.root, textvariable=self.Cheese_sauce_int)
+        self.Cheese_sauce_Entry.place(x=200, y=250)
 
         Label(self.root, text="Пепперони").place(x=100, y=300)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=300)
+        self.Pepperoni_Entry = ttk.Entry(self.root, textvariable=self.Pepperoni_int)
+        self.Pepperoni_Entry.place(x=200, y=300)
 
         Label(self.root, text="Грибы").place(x=100, y=350)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=350)
+        self.Mushrooms_Entry = ttk.Entry(self.root, textvariable=self.Mushrooms_int)
+        self.Mushrooms_Entry.place(x=200, y=350)
 
         Label(self.root, text="Помидоры").place(x=100, y=400)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=400)
+        self.Tomatoes_Entry = ttk.Entry(self.root, textvariable=self.Tomatoes_int)
+        self.Tomatoes_Entry.place(x=200, y=400)
 
         Label(self.root, text="Оливки").place(x=100, y=450)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=450)
+        self.Olives_Entry = ttk.Entry(self.root, textvariable=self.Olives_int)
+        self.Olives_Entry.place(x=200, y=450)
 
         Label(self.root, text="Колбаса").place(x=100, y=470)
-        self.Chees_Entry = ttk.Entry(self.root, textvariable=self.Chees_int)
-        self.Chees_Entry.place(x=200, y=470)
+        self.Sausage_Entry = ttk.Entry(self.root, textvariable=self.Sausage_int)
+        self.Sausage_Entry.place(x=200, y=470)
 
+        self.btn_Confirm1 = Button(self.root, text="Подтвердить", command= self.saved)
+        self.btn_Confirm1.place(x=400, y=250)
 root = Tk()
 app = Authorization_Root(root)
 root.mainloop()
-
