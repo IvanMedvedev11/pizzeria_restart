@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import re
-
+from datetime import datetime
 class Authorization_Root:
     def __init__(self, root):
         self.root = root
@@ -22,11 +22,32 @@ class Authorization_Root:
         self.Tomatoes_int = IntVar()
         self.Olives_int = IntVar()
         self.Sausage_int = IntVar()
+        self.Beer_int = IntVar()
+        self.Vodka_int = IntVar()
+        self.Wine_int = IntVar()
+        self.Hookah_int = IntVar()
+        self.Cigarettes_int = IntVar()
         # Регулярное выражение для проверки даты
         self.date_pattern = r'(?<!\d)(?:0?[1-9]|[12][0-9]|3[01])-(?:0?[1-9]|1[0-2])-(?:19[0-9][0-9]|20[01][0-9])(?!\d)'
 
         self.Root_ui()
 
+    def is_over_18(self):
+        if not re.fullmatch(self.date_pattern, self.birthday_var.get()):
+            return False
+
+
+        day, month, year = map(int, self.birthday_var.get().split('-'))
+        birth_date = datetime(year=year, month=month, day=day)
+        today = datetime.now()
+
+        age = today.year - birth_date.year
+        if (today.month, today.day) < (birth_date.month, birth_date.day):
+            age -= 1
+        if age >= 18:
+            self.Adult_menu()
+        else:
+            messagebox.showerror("Ошибка", "Вам должно быть больше 18!")
     def Root_ui(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -89,9 +110,18 @@ class Authorization_Root:
         if self.Sausage_int.get() > 0:
             selected_ingredients["Колбаса"] = self.Sausage_int.get()
 
+        if self.Beer_int.get() > 0:
+            selected_ingredients["Пиво"] = self.Beer_int.get()
+        if self.Vodka_int.get() > 0:
+            selected_ingredients["Водка"] = self.Vodka_int.get()
+        if self.Wine_int.get() > 0:
+            selected_ingredients["Вино"] = self.Wine_int.get()
+        if self.Hookah_int.get() > 0:
+            selected_ingredients["Сигареты"] = self.Hookah_int.get()
+
         print(f"Имя: {name}, Фамилия: {last_name}, Дата рождения: {birthday}")
         print("Выбранные ингредиенты:", selected_ingredients)
-        self.Choice()
+        self.Root_ui()
 
         return name, last_name, birthday, selected_ingredients
 
@@ -106,8 +136,11 @@ class Authorization_Root:
 
         self.btn_ingredient = Button(self.root, text="Кастомная пицца", command=self.Ingredient_choice)
         self.btn_ingredient.place(x=200, y=150)
-        self.btn_return = Button(self.root, text="Завершить заказ", command=self.Root_ui)
+        self.btn_18 = Button(self.root, text="Взрослые приколюшки", command=self.is_over_18)
+        self.btn_18.place(x=200, y=300)
+        self.btn_return = Button(self.root, text="Завершить заказ", command=self.saved)
         self.btn_return.place(x=200, y=400)
+
     def Pizza_choice(self):
         for widget in self.root.winfo_children():
             widget.destroy()
@@ -154,8 +187,34 @@ class Authorization_Root:
         self.Sausage_Entry = ttk.Entry(self.root, textvariable=self.Sausage_int)
         self.Sausage_Entry.place(x=200, y=470)
 
-        self.btn_Confirm1 = Button(self.root, text="Подтвердить", command= self.saved)
+        self.btn_Confirm1 = Button(self.root, text="Подтвердить", command= self.Choice)
         self.btn_Confirm1.place(x=400, y=250)
+    def Adult_menu(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
+        Label(self.root, text="Выберите что то вредное):").place(x=200, y=50)
+        Label(self.root, text="Пиво").place(x=100, y=100)
+        self.Beer_Entry = ttk.Entry(self.root, textvariable=self.Beer_int)
+        self.Beer_Entry.place(x=200, y=100)
+
+        Label(self.root, text="Водка").place(x=100, y=150)
+        self.Vodka_Entry = ttk.Entry(self.root, textvariable=self.Vodka_int)
+        self.Vodka_Entry.place(x=200, y=150)
+
+        Label(self.root, text="Вино").place(x=100, y=200)
+        self.Wine_Entry = ttk.Entry(self.root, textvariable=self.Wine_int)
+        self.Wine_Entry.place(x=200, y=200)
+
+        Label(self.root, text="Кальянчик").place(x=100, y=250)
+        self.Hookah_Entry = ttk.Entry(self.root, textvariable=self.Hookah_int)
+        self.Hookah_Entry.place(x=200, y=250)
+
+        Label(self.root, text="Сигареты").place(x=100, y=300)
+        self.Cigarettes_Entry = ttk.Entry(self.root, textvariable=self.Cigarettes_int)
+        self.Cigarettes_Entry.place(x=200, y=300)
+
+        self.btn_Confirm2 = Button(self.root, text="Подтвердить", command= self.Choice)
+        self.btn_Confirm2.place(x=400, y=250)
 root = Tk()
 app = Authorization_Root(root)
 root.mainloop()
