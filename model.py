@@ -1,25 +1,26 @@
 import hashlib
+import hashlib
 import sqlite3
 class FileManager:
     def __init__(self):
         self.connection = sqlite3.connect("database.db")
         self.cursor = self.connection.cursor()
-        self.cursor.execute('''CREATE TABLE IF NOT EXIST Users (
-        first_name TEXT IS NOT NULL
-        last_name TEXT IS NOT NULL
-        birthday DATETIME
-        number TEXT IS NOT NULL
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Users (
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        birthday DATETIME,
+        number TEXT NOT NULL
         )''')
         self.connection.commit()
-        self.cursor.execute('''CREATE TABLE IF NOT EXIST Products (
-                name TEXT IS NOT NULL
-                price INTEGER
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Products (
+                name TEXT NOT NULL,
+                price INTEGER,
                 count INTEGER
                 )''')
         self.connection.commit()
-        self.cursor.execute('''CREATE TABLE IF NOT EXIST Products_18+ (
-                        name TEXT IS NOT NULL
-                        price INTEGER
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Products_18+ (
+                        name TEXT IS NOT NULL,
+                        price INTEGER,
                         count INTEGER
                         )''')
         self.connection.commit()
@@ -27,7 +28,7 @@ class User:
     def __init__(self):
         self.databaser = FileManager()
     def add_user(self, first_name, last_name, birthday, number):
-        self.databaser.cursor.execute('''SELECT * FROM Users WHERE number = ?''', (number))
+        self.databaser.cursor.execute('''SELECT * FROM Users WHERE number = ?''', (number,))
         user = self.databaser.cursor.fetchone()
         if user is not None:
             return "Пользователь уже существует"
@@ -40,16 +41,16 @@ class Pizza:
         self.name = name
         self.price = 0
     def add_ingredient(self, ingredient, count, table_name):
-        self.databaser.cursor.execute('''SELECT count FROM ? WHERE name = ?''', (table_name, ingredient))
+        self.databaser.cursor.execute(f'''SELECT count FROM {table_name} WHERE name = ?''', (ingredient,))
         product_count = self.databaser.cursor.fetchone()
         if product_count is None:
             return "Ингредиента не существует"
         product_count = product_count[0]
         if count > product_count:
             return "Не хватает ингредиентов"
-        self.databaser.cursor.execute('''UPDATE ? SET count = count - ? WHERE name = ?''', (table_name, count, ingredient))
+        self.databaser.cursor.execute(f'''UPDATE {table_name} SET count = count - ? WHERE name = ?''', (count, ingredient))
         self.databaser.connection.commit()
-        self.databaser.cursor.execute('''SELECT price FROM ? WHERE name = ?''', (table_name, ingredient))
+        self.databaser.cursor.execute(f'''SELECT price FROM {table_name} WHERE name = ?''', (ingredient,))
         price = self.databaser.cursor.fetchone()[0]
         self.price += price * count
     def add_size(self, size):
@@ -59,14 +60,18 @@ class Admin:
     def __init__(self):
         self.hash_password = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'
         self.state = False
+        self.databaser = FileManager()
     def sign_in(self, user_password):
         hash_user = hashlib.sha256(user_password.encode()).hexdigest()
         if hash_user == self.hash_password:
             self.state = True
             return "Вы успешно вошли"
         return "Неверный пароль"
-    def change_ingredient(self, ingredient, stat, to_change, database):
-        for i in range(len(database)):
-            if database[i]['name'] == ingredient:
-                database[i][stat] = to_change
-                return "Данные успешно изменены"
+    def change_ingredient(self, ingredient, stat, to_change, table_name):
+        self.databaser.cursor.execute(f'''SELECT * FROM {table_name} WHERE name = ?''', (ingredient,))
+        product = self.databaser.cursor.fetchone()
+        if product is None:
+            return "Ингредиента не существует"
+        self.databaser.cursor.execute(f'''UPDATE {table_name} SET {stat} = ? WHERE name = ?''', (to_change, ingredient))
+        self.databaser.connection.commit()
+
