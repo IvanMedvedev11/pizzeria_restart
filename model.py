@@ -41,7 +41,10 @@ class Pizza:
         self.price = 0
     def add_ingredient(self, ingredient, count, table_name):
         self.databaser.cursor.execute('''SELECT count FROM ? WHERE name = ?''', (table_name, ingredient))
-        product_count = self.databaser.cursor.fetchone()[0]
+        product_count = self.databaser.cursor.fetchone()
+        if product_count is None:
+            return "Ингредиента не существует"
+        product_count = product_count[0]
         if count > product_count:
             return "Не хватает ингредиентов"
         self.databaser.cursor.execute('''UPDATE ? SET count = count - ? WHERE name = ?''', (table_name, count, ingredient))
@@ -67,4 +70,3 @@ class Admin:
             if database[i]['name'] == ingredient:
                 database[i][stat] = to_change
                 return "Данные успешно изменены"
-
