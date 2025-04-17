@@ -1,5 +1,5 @@
 from model import FileManager, Pizza, Admin
-import psycopg2
+import  psycopg2
 from typing import List, Dict, Union
 
 class PizzaController:
@@ -61,7 +61,6 @@ class PizzaController:
                     if item['name'] == ingredient_name:
                         item['count'] -= count
                         break
-
             return "Ингредиент добавлен"
         except Exception as e:
             self.db_connection.rollback()
@@ -70,10 +69,8 @@ class PizzaController:
     def set_pizza_size(self, size: str) -> str:
         if not self.current_pizza:
             return "Сначала создайте пиццу"
-
         self.current_pizza.add_size(size)
         return f"Размер установлен. Текущая цена: {self.current_pizza.price}"
-
     def save_order(self, user_data: Dict) -> str:
         if not self.current_pizza:
             return "Нет активного заказа"
@@ -89,7 +86,6 @@ class PizzaController:
             }
         }
         self.file_manager.save_to_json('orders.json', json_order)
-
         if self.db_connection:
             try:
                 with self.db_connection.cursor() as cursor:
@@ -98,7 +94,6 @@ class PizzaController:
                         (user_data.get('name'), self.current_pizza.name, self.current_pizza.price)
                     )
                     order_id = cursor.fetchone()[0]
-
                     for ing, qty in self.current_pizza.ingredients:
                         cursor.execute(
                             "INSERT INTO order_ingredients (order_id, ingredient_name, quantity) VALUES (%s, %s, %s)",
@@ -106,13 +101,10 @@ class PizzaController:
                         )
 
                     self.db_connection.commit()
-
             except Exception as e:
                 self.db_connection.rollback()
                 return f"Заказ сохранен в JSON, но ошибка БД: {e}"
-
         return "Заказ сохранен в JSON и БД"
-
     def admin_change_ingredient(self, ingredient: str, stat: str, to_change: Union[int, float]) -> str:
         if not self.admin.state:
             return "Требуется авторизация"
@@ -139,10 +131,8 @@ class PizzaController:
                 return f"{result} (Ошибка обновления БД: {e})"
 
         return f"{result} (БД не обновлена - нет подключения)"
-
     def get_available_ingredients(self) -> List[Dict]:
         return [{'name': item['name'], 'count': item['count']} for item in self.database if item['count'] > 0]
-
     def __del__(self):
         if hasattr(self, 'db_connection') and self.db_connection:
             self.db_connection.close()
