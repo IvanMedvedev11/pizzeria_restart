@@ -18,8 +18,8 @@ class FileManager:
                 count INTEGER
                 )''')
         self.connection.commit()
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Products_18+ (
-                        name TEXT IS NOT NULL,
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Products_18 (
+                        name TEXT NOT NULL,
                         price INTEGER,
                         count INTEGER
                         )''')
