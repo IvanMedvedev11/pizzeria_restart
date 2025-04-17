@@ -24,6 +24,9 @@ class FileManager:
                         count INTEGER
                         )''')
         self.connection.commit()
+    def save_txt(self, filename, logs):
+        with open(filename, 'w') as file:
+            file.write(logs)
 class User:
     def __init__(self):
         self.databaser = FileManager()
