@@ -1,7 +1,9 @@
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
 import re
 from datetime import datetime
-from tkinter import *
-from tkinter import ttk, messagebox
+
 
 class Authorization_Root:
     def __init__(self, root):
@@ -11,18 +13,15 @@ class Authorization_Root:
         self.root.resizable(False, False)
         self.root.configure(bg='#f5f5f5')
 
-        # Настройка стилей
         self.style = ttk.Style()
         self.style.theme_use('clam')
 
-        # Цветовая схема
         self.bg_color = '#f5f5f5'
         self.primary_color = '#ff6b6b'
         self.secondary_color = '#4ecdc4'
         self.accent_color = '#ffbe0b'
         self.text_color = '#333333'
 
-        # Настройка стилей для виджетов
         self.style.configure('TButton',
                              font=('Helvetica', 12),
                              padding=10,
@@ -40,10 +39,17 @@ class Authorization_Root:
                              font=('Helvetica', 12),
                              padding=5)
 
-        # Инициализация переменных
+        self.style.configure('TRadiobutton',
+                             font=('Helvetica', 11),
+                             background=self.bg_color,
+                             foreground=self.text_color)
+
+
+
         self.name_var = StringVar()
         self.last_name_var = StringVar()
         self.birthday_var = StringVar()
+
         self.Chees_int = IntVar()
         self.Ketchup_int = IntVar()
         self.Mayonnaise_int = IntVar()
@@ -53,11 +59,22 @@ class Authorization_Root:
         self.Tomatoes_int = IntVar()
         self.Olives_int = IntVar()
         self.Sausage_int = IntVar()
+
         self.Beer_int = IntVar()
         self.Vodka_int = IntVar()
         self.Wine_int = IntVar()
         self.Hookah_int = IntVar()
         self.Cigarettes_int = IntVar()
+
+        self.Pepperoni_pizza_int = IntVar()
+        self.Margherita_int = IntVar()
+        self.Four_Cheese_int = IntVar()
+        self.Hawaiian_int = IntVar()
+
+        self.pepperoni_size = StringVar(value='Средняя')
+        self.margherita_size = StringVar(value='Средняя')
+        self.four_cheese_size = StringVar(value='Средняя')
+        self.hawaiian_size = StringVar(value='Средняя')
 
         self.date_pattern = r'(?<!\d)(?:0?[1-9]|[12][0-9]|3[01])-(?:0?[1-9]|1[0-2])-(?:19[0-9][0-9]|20[01][0-9])(?!\d)'
 
@@ -115,46 +132,84 @@ class Authorization_Root:
         self.Choice()
 
     def saved(self):
-        name = self.name_var.get()
-        last_name = self.last_name_var.get()
-        birthday = self.birthday_var.get()
+        self.order_dict = {
+            'user_info': {},
+            'pizzas': {},
+            'ingredients': {},
+            'adult_items': {}
+        }
+        self.order_dict['user_info'] = {
+            'name': self.name_var.get(),
+            'last_name': self.last_name_var.get(),
+            'birthday': self.birthday_var.get()
+        }
+        pizzas = {}
+        if self.Pepperoni_pizza_int.get() > 0:
+            pizzas['Пепперони'] = {
+                'количество': self.Pepperoni_pizza_int.get(),
+                'размер': self.pepperoni_size.get()
+            }
+        if self.Margherita_int.get() > 0:
+            pizzas['Маргарита'] = {
+                'количество': self.Margherita_int.get(),
+                'размер': self.margherita_size.get()
+            }
+        if self.Four_Cheese_int.get() > 0:
+            pizzas['Четыре сыра'] = {
+                'количество': self.Four_Cheese_int.get(),
+                'размер': self.four_cheese_size.get()
+            }
+        if self.Hawaiian_int.get() > 0:
+            pizzas['Гавайская'] = {
+                'количество': self.Hawaiian_int.get(),
+                'размер': self.hawaiian_size.get()
+            }
+        self.order_dict['pizzas'] = pizzas
 
-        # Собираем только те ингредиенты, которые больше 0
-        selected_ingredients = {}
-
+        ingredients = {}
         if self.Chees_int.get() > 0:
-            selected_ingredients["Сыр"] = self.Chees_int.get()
+            ingredients['Сыр'] = self.Chees_int.get()
         if self.Ketchup_int.get() > 0:
-            selected_ingredients["Кетчуп"] = self.Ketchup_int.get()
-        if self.Mayonnaise_int.get() > 0:
-            selected_ingredients["Майонез"] = self.Mayonnaise_int.get()
-        if self.Cheese_sauce_int.get() > 0:
-            selected_ingredients["Сырный соус"] = self.Cheese_sauce_int.get()
-        if self.Pepperoni_int.get() > 0:
-            selected_ingredients["Пепперони"] = self.Pepperoni_int.get()
-        if self.Mushrooms_int.get() > 0:
-            selected_ingredients["Грибы"] = self.Mushrooms_int.get()
-        if self.Tomatoes_int.get() > 0:
-            selected_ingredients["Помидоры"] = self.Tomatoes_int.get()
-        if self.Olives_int.get() > 0:
-            selected_ingredients["Оливки"] = self.Olives_int.get()
-        if self.Sausage_int.get() > 0:
-            selected_ingredients["Колбаса"] = self.Sausage_int.get()
+            ingredients['Кетчуп'] = self.Ketchup_int.get()
 
+        self.order_dict['ingredients'] = ingredients
+
+        adult_items = {}
         if self.Beer_int.get() > 0:
-            selected_ingredients["Пиво"] = self.Beer_int.get()
-        if self.Vodka_int.get() > 0:
-            selected_ingredients["Водка"] = self.Vodka_int.get()
-        if self.Wine_int.get() > 0:
-            selected_ingredients["Вино"] = self.Wine_int.get()
-        if self.Hookah_int.get() > 0:
-            selected_ingredients["Сигареты"] = self.Hookah_int.get()
+            adult_items['Пиво'] = self.Beer_int.get()\
 
-        print(f"Имя: {name}, Фамилия: {last_name}, Дата рождения: {birthday}")
-        print("Выбранные ингредиенты:", selected_ingredients)
+        self.order_dict['adult_items'] = adult_items
+
+        print("Полный заказ:")
+        print(self.order_dict)
+
+        messagebox.showinfo("Заказ сохранен", "Ваш заказ был сохранен!")
         self.Root_ui()
 
-        return name, last_name, birthday, selected_ingredients
+        return self.order_dict
+
+        adult_items = {}
+        if self.Beer_int.get() > 0:
+            adult_items['Пиво'] = self.Beer_int.get()
+        if self.Vodka_int.get() > 0:
+            adult_items['Водка'] = self.Vodka_int.get()
+        if self.Wine_int.get() > 0:
+            adult_items['Вино'] = self.Wine_int.get()
+        if self.Hookah_int.get() > 0:
+            adult_items['Кальян'] = self.Hookah_int.get()
+        if self.Cigarettes_int.get() > 0:
+            adult_items['Сигареты'] = self.Cigarettes_int.get()
+        self.order_dict['adult_items'] = adult_items
+
+        # Выводим весь заказ
+        print("Весь заказ:")
+        print(self.order_dict)
+
+        # Показываем сообщение с подтверждением
+        messagebox.showinfo("Заказ сохранен", "Ваш заказ был сохранен в системе!")
+        self.Root_ui()
+
+        return self.order_dict
 
     def Choice(self):
         for widget in self.root.winfo_children():
@@ -177,8 +232,44 @@ class Authorization_Root:
             widget.destroy()
 
         Label(self.root, text="Выберите готовую пиццу:").place(x=200, y=50)
-        self.btn_Confirm3 = ttk.Button(self.root, text="Подтвердить", command=self.Choice,style='TButton')
-        self.btn_Confirm3.place(x=400, y=250)
+
+        # Пепперони
+        Label(self.root, text="Пепперони").place(x=100, y=100)
+        self.Pepperoni_pizza_Entry = ttk.Entry(self.root, textvariable=self.Pepperoni_pizza_int)
+        self.Pepperoni_pizza_Entry.place(x=200, y=100)
+        ttk.Radiobutton(self.root, text="Маленькая", variable=self.pepperoni_size, value="Маленькая").place(x=300,
+                                                                                                            y=100)
+        ttk.Radiobutton(self.root, text="Средняя", variable=self.pepperoni_size, value="Средняя").place(x=400, y=100)
+        ttk.Radiobutton(self.root, text="Большая", variable=self.pepperoni_size, value="Большая").place(x=500, y=100)
+
+        # Маргарита
+        Label(self.root, text="Маргарита").place(x=100, y=150)
+        self.Margherita_Entry = ttk.Entry(self.root, textvariable=self.Margherita_int)
+        self.Margherita_Entry.place(x=200, y=150)
+        ttk.Radiobutton(self.root, text="Маленькая", variable=self.margherita_size, value="Маленькая").place(x=300,
+                                                                                                             y=150)
+        ttk.Radiobutton(self.root, text="Средняя", variable=self.margherita_size, value="Средняя").place(x=400, y=150)
+        ttk.Radiobutton(self.root, text="Большая", variable=self.margherita_size, value="Большая").place(x=500, y=150)
+
+        # Четыре сыра
+        Label(self.root, text="Четыре сыра").place(x=100, y=200)
+        self.Four_Cheese_Entry = ttk.Entry(self.root, textvariable=self.Four_Cheese_int)
+        self.Four_Cheese_Entry.place(x=200, y=200)
+        ttk.Radiobutton(self.root, text="Маленькая", variable=self.four_cheese_size, value="Маленькая").place(x=300,
+                                                                                                              y=200)
+        ttk.Radiobutton(self.root, text="Средняя", variable=self.four_cheese_size, value="Средняя").place(x=400, y=200)
+        ttk.Radiobutton(self.root, text="Большая", variable=self.four_cheese_size, value="Большая").place(x=500, y=200)
+
+        # Гавайская
+        Label(self.root, text="Гавайская").place(x=100, y=250)
+        self.Hawaiian_Entry = ttk.Entry(self.root, textvariable=self.Hawaiian_int)
+        self.Hawaiian_Entry.place(x=200, y=250)
+        ttk.Radiobutton(self.root, text="Маленькая", variable=self.hawaiian_size, value="Маленькая").place(x=300, y=250)
+        ttk.Radiobutton(self.root, text="Средняя", variable=self.hawaiian_size, value="Средняя").place(x=400, y=250)
+        ttk.Radiobutton(self.root, text="Большая", variable=self.hawaiian_size, value="Большая").place(x=500, y=250)
+
+        self.btn_Confirm3 = ttk.Button(self.root, text="Подтвердить", command=self.Choice, style='TButton')
+        self.btn_Confirm3.place(x=400, y=300)
     def Ingredient_choice(self):
         for widget in self.root.winfo_children():
             widget.destroy()
