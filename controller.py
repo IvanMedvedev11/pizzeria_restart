@@ -1,8 +1,8 @@
 import sqlite3
 from datetime import datetime
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional
 
-from model import Pizza, Admin
+from model import Pizza, Admin, User, FileManager
 
 
 class PizzaController:
@@ -10,179 +10,246 @@ class PizzaController:
         self.view = view
         self.current_pizza = None
         self.current_user = None
-        self.db = self._init_db()
+        self.db_manager = FileManager()
+        self.user_manager = User()
         self.view.set_controller(self)
+        self._init_db()
 
     def _init_db(self):
-        conn = sqlite3.connect('pizzeria.db')
-        cursor = conn.cursor()
+        # Инициализация базы данных с тестовыми данными
+        try:
+            # Добавляем тестовые ингредиенты
+            self.db_manager.cursor.executemany('''
+                INSERT OR IGNORE INTO Products (name, price, count)
+                VALUES (?, ?, ?)
+            ''', [
+                ('Сыр', 50, 100),
+                ('Кетчуп', 30, 100),
+                ('Майонез', 30, 100),
+                ('Сырный соус', 40, 100),
+                ('Пепперони', 70, 100),
+                ('Грибы', 60, 100),
+                ('Помидоры', 40, 100),
+                ('Оливки', 50, 100),
+                ('Колбаса', 60, 100)
+            ])
 
-        # Создание таблиц
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                last_name TEXT NOT NULL,
-                birthday TEXT NOT NULL,
-                is_adult BOOLEAN NOT NULL
-            )
-        ''')
+            # Добавляем тестовые пиццы
+            self.db_manager.cursor.executemany('''
+                INSERT OR IGNORE INTO Products (name, price, count)
+                VALUES (?, ?, ?)
+            ''', [
+                ('Пепперони', 350, 100),
+                ('Маргарита', 300, 100),
+                ('Четыре сыра', 400, 100),
+                ('Гавайская', 380, 100)
+            ])
 
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS products (
-                name TEXT PRIMARY KEY,
-                leftovers INTEGER NOT NULL,
-                cost INTEGER NOT NULL,
-                is_18 BOOLEAN NOT NULL
-            )
-        ''')
+            # Добавляем взрослые товары
+            self.db_manager.cursor.executemany('''
+                INSERT OR IGNORE INTO Products_18 (name, price, count)
+                VALUES (?, ?, ?)
+            ''', [
+                ('Пиво', 120, 100),
+                ('Водка', 200, 100),
+                ('Вино', 250, 100),
+                ('Кальян', 500, 100),
+                ('Сигареты', 150, 100)
+            ])
 
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS products_18plus (
-                name TEXT PRIMARY KEY,
-                leftovers INTEGER NOT NULL,
-                cost INTEGER NOT NULL
-            )
-        ''')
-
-        # Добавляем тестовые данные
-        cursor.executemany('''
-            INSERT OR IGNORE INTO products (name, leftovers, cost, is_18)
-            VALUES (?, ?, ?, ?)
-        ''', [
-            ('Сыр', 100, 50, 0),
-            ('Кетчуп', 100, 30, 0),
-            ('Пепперони', 100, 70, 0)
-        ])
-
-        cursor.executemany('''
-            INSERT OR IGNORE INTO products_18plus (name, leftovers, cost)
-            VALUES (?, ?, ?)
-        ''', [
-            ('Пиво', 100, 120),
-            ('Водка', 100, 200)
-        ])
-
-        conn.commit()
-        return conn
+            self.db_manager.connection.commit()
+        except Exception as e:
+            print(f"Ошибка инициализации БД: {e}")
 
     def authenticate_user(self, name: str, last_name: str, birthday: str) -> bool:
         try:
+            # Проверяем формат даты
             day, month, year = map(int, birthday.split('-'))
-            age = datetime.now().year - year
-            is_adult = age >= 18
+            birth_date = datetime(year=year, month=month, day=day)
 
-            cursor = self.db.cursor()
-            cursor.execute('''
-                INSERT INTO users (name, last_name, birthday, is_adult)
-                VALUES (?, ?, ?, ?)
-            ''', (name, last_name, birthday, is_adult))
+            # Рассчитываем возраст
+            today = datetime.now()
+            age = today.year - birth_date.year
+            if (today.month, today.day) < (birth_date.month, birth_date.day):
+                age -= 1
 
-            self.db.commit()
+            # Сохраняем пользователя
+            result = self.user_manager.add_user(name, last_name, birthday, "123")  # номер временный
+            if "успешно" not in result.lower():
+                self.view.show_error(result)
+                return False
+
             self.current_user = {
-                'id': cursor.lastrowid,
                 'name': name,
-                'is_adult': is_adult
+                'last_name': last_name,
+                'birthday': birthday,
+                'is_adult': age >= 18
             }
-            self.view.on_auth_success(is_adult)
+
+            self.view.on_auth_success(self.current_user['is_adult'])
             return True
 
+        except ValueError:
+            self.view.show_error("Неверный формат даты. Используйте ДД-ММ-ГГГГ")
+            return False
         except Exception as e:
             self.view.show_error(f"Ошибка аутентификации: {str(e)}")
             return False
 
-    def create_pizza(self, pizza_type: str) -> bool:
+    def get_pizza_list(self) -> List[Dict]:
         try:
-            self.current_pizza = Pizza(pizza_type)
-            self.view.update_pizza_display(pizza_type, 0, [])
-            return True
+            self.db_manager.cursor.execute('''
+                SELECT name, price FROM Products 
+                WHERE name IN ('Пепперони', 'Маргарита', 'Четыре сыра', 'Гавайская')
+            ''')
+            return [{'name': row[0], 'price': row[1]} for row in self.db_manager.cursor.fetchall()]
         except Exception as e:
-            self.view.show_error(f"Ошибка создания пиццы: {str(e)}")
-            return False
+            self.view.show_error(f"Ошибка загрузки меню: {str(e)}")
+            return []
 
-    def add_ingredient(self, ingredient_name: str, quantity: int) -> bool:
-        if not self.current_pizza:
-            self.view.show_error("Сначала создайте пиццу")
-            return False
-
+    def get_ingredients_list(self) -> List[Dict]:
         try:
-            table_name = "products_18plus" if ingredient_name in ["Пиво", "Водка"] else "products"
-            result = self.current_pizza.add_ingredient(ingredient_name, quantity, table_name)
-
-            if isinstance(result, str):
-                self.view.show_error(result)
-                return False
-
-            self.view.update_pizza_display(
-                self.current_pizza.name,
-                self.current_pizza.price,
-                self._get_current_ingredients()
-            )
-
-            return True
-
-        except Exception as e:
-            self.view.show_error(f"Ошибка добавления ингредиента: {str(e)}")
-            return False
-
-    def finalize_order(self) -> bool:
-        if not self.current_pizza or not self.current_user:
-            self.view.show_error("Нет активного заказа")
-            return False
-
-        try:
-            order_data = {
-                'user': {
-                    'name': self.current_user['name'],
-                    'is_adult': self.current_user['is_adult']
-                },
-                'pizza': {
-                    'type': self.current_pizza.name,
-                    'price': self.current_pizza.price,
-                    'ingredients': self._get_current_ingredients()
-                }
-            }
-
-            self.view.on_order_success(order_data)
-            self.current_pizza = None
-            return True
-
-        except Exception as e:
-            self.view.show_error(f"Ошибка сохранения заказа: {str(e)}")
-            return False
-
-    def get_available_ingredients(self, include_adult=False) -> List[Dict]:
-        try:
-            cursor = self.db.cursor()
-
-            if include_adult:
-                cursor.execute('''
-                    SELECT name, leftovers, cost 
-                    FROM products
-                    UNION ALL
-                    SELECT name, leftovers, cost 
-                    FROM products_18plus
-                    WHERE leftovers > 0
-                ''')
-            else:
-                cursor.execute('''
-                    SELECT name, leftovers, cost 
-                    FROM products 
-                    WHERE leftovers > 0
-                ''')
-
-            return [{
-                'name': row[0],
-                'leftovers': row[1],
-                'price': row[2]
-            } for row in cursor.fetchall()]
-
+            self.db_manager.cursor.execute('''
+                SELECT name, price FROM Products 
+                WHERE name NOT IN ('Пепперони', 'Маргарита', 'Четыре сыра', 'Гавайская')
+            ''')
+            return [{'name': row[0], 'price': row[1]} for row in self.db_manager.cursor.fetchall()]
         except Exception as e:
             self.view.show_error(f"Ошибка загрузки ингредиентов: {str(e)}")
             return []
 
-    def _get_current_ingredients(self) -> List[Dict]:
-        return []
+    def get_adult_products_list(self) -> List[Dict]:
+        try:
+            self.db_manager.cursor.execute('SELECT name, price FROM Products_18')
+            return [{'name': row[0], 'price': row[1]} for row in self.db_manager.cursor.fetchall()]
+        except Exception as e:
+            self.view.show_error(f"Ошибка загрузки взрослых товаров: {str(e)}")
+            return []
+
+    def create_custom_pizza(self, ingredients: Dict[str, int]) -> Optional[Dict]:
+        try:
+            pizza = Pizza("Кастомная пицца")
+            total_price = 0
+
+            for ingredient, quantity in ingredients.items():
+                # Проверяем наличие ингредиента
+                self.db_manager.cursor.execute(
+                    'SELECT count, price FROM Products WHERE name = ?',
+                    (ingredient,)
+                )
+                result = self.db_manager.cursor.fetchone()
+
+                if not result or result[0] < quantity:
+                    self.view.show_error(f"Недостаточно ингредиента: {ingredient}")
+                    return None
+
+                # Добавляем ингредиент в пиццу
+                pizza.add_ingredient(ingredient, quantity, "Products")
+                total_price += result[1] * quantity
+
+            self.current_pizza = {
+                'type': 'custom',
+                'ingredients': ingredients,
+                'price': total_price
+            }
+
+            return self.current_pizza
+
+        except Exception as e:
+            self.view.show_error(f"Ошибка создания пиццы: {str(e)}")
+            return None
+
+    def add_ready_pizza(self, pizza_name: str, size: str, quantity: int) -> Optional[Dict]:
+        try:
+            size_coefficients = {
+                'Маленькая': 0.8,
+                'Средняя': 1.0,
+                'Большая': 1.2
+            }
+
+            self.db_manager.cursor.execute(
+                'SELECT price FROM Products WHERE name = ?',
+                (pizza_name,)
+            )
+            base_price = self.db_manager.cursor.fetchone()[0]
+
+            # Рассчитываем итоговую цену
+            total_price = base_price * size_coefficients.get(size, 1.0) * quantity
+
+            self.current_pizza = {
+                'type': 'ready',
+                'name': pizza_name,
+                'size': size,
+                'quantity': quantity,
+                'price': total_price
+            }
+
+            return self.current_pizza
+
+        except Exception as e:
+            self.view.show_error(f"Ошибка добавления пиццы: {str(e)}")
+            return None
+
+    def add_adult_product(self, product_name: str, quantity: int) -> Optional[Dict]:
+        try:
+            if not self.current_user or not self.current_user['is_adult']:
+                self.view.show_error("Подтвердите возраст для заказа этих товаров")
+                return None
+
+            # Проверяем наличие товара
+            self.db_manager.cursor.execute(
+                'SELECT count, price FROM Products_18 WHERE name = ?',
+                (product_name,)
+            )
+            result = self.db_manager.cursor.fetchone()
+
+            if not result or result[0] < quantity:
+                self.view.show_error(f"Недостаточно товара: {product_name}")
+                return None
+
+            total_price = result[1] * quantity
+
+            adult_order = {
+                'name': product_name,
+                'quantity': quantity,
+                'price': total_price
+            }
+
+            if not hasattr(self, 'adult_products'):
+                self.adult_products = []
+
+            self.adult_products.append(adult_order)
+            return adult_order
+
+        except Exception as e:
+            self.view.show_error(f"Ошибка добавления товара: {str(e)}")
+            return None
+
+    def finalize_order(self) -> bool:
+        try:
+            if not self.current_user:
+                self.view.show_error("Сначала авторизуйтесь")
+                return False
+
+            order_data = {
+                'user': self.current_user,
+                'pizza': self.current_pizza if hasattr(self, 'current_pizza') else None,
+                'adult_products': self.adult_products if hasattr(self, 'adult_products') else None
+            }
+
+
+            self.view.on_order_success(order_data)
+
+            if hasattr(self, 'current_pizza'):
+                del self.current_pizza
+            if hasattr(self, 'adult_products'):
+                del self.adult_products
+
+            return True
+
+        except Exception as e:
+            self.view.show_error(f"Ошибка оформления заказа: {str(e)}")
+            return False
 
     def admin_login(self, password: str) -> bool:
         admin = Admin()
@@ -193,19 +260,28 @@ class PizzaController:
         self.view.show_error(result)
         return False
 
-    def admin_update_product(self, product_name: str, field: str, new_value: int) -> bool:
+    def admin_update_product(self, product_type: str, product_name: str, field: str, new_value: str) -> bool:
         try:
             admin = Admin()
-            table_name = "products_18plus" if product_name in ["Пиво", "Водка"] else "products"
+            table_name = "Products_18" if product_type == "adult" else "Products"
+
+            if field == "price":
+                new_value = int(new_value)
+            elif field == "count":
+                new_value = int(new_value)
+
             result = admin.change_ingredient(product_name, field, new_value, table_name)
 
             if "успешно" not in result.lower():
                 self.view.show_error(result)
                 return False
 
-            self.view.show_success(result)
+            self.view.show_success(f"Товар {product_name} успешно обновлен")
             return True
 
+        except ValueError:
+            self.view.show_error("Неверный формат числа")
+            return False
         except Exception as e:
             self.view.show_error(f"Ошибка обновления: {str(e)}")
             return False
