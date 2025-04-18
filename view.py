@@ -354,11 +354,7 @@ class Authorization_Root:
 
         self.btn_Confirm2 = ttk.Button(self.root, text="Подтвердить", command= self.Choice, style='TButton')
         self.btn_Confirm2.place(x=400, y=250)
-root = Tk()
-app = Authorization_Root(root)
-root.mainloop()
-        self.btn_Confirm2 = ttk.Button(self.root, text="Подтвердить", command= self.Choice, style='TButton')
-        self.btn_Confirm2.place(x=400, y=250)
+
 root = Tk()
 app = Authorization_Root(root)
 root.mainloop()
