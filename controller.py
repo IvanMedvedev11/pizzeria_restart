@@ -161,12 +161,14 @@ class PizzaController:
 
     def add_ready_pizza(self, pizza_name: str, size: str, quantity: int) -> Optional[Dict]:
         try:
+            # Определяем коэффициент размера
             size_coefficients = {
                 'Маленькая': 0.8,
                 'Средняя': 1.0,
                 'Большая': 1.2
             }
 
+            # Получаем базовую цену пиццы
             self.db_manager.cursor.execute(
                 'SELECT price FROM Products WHERE name = ?',
                 (pizza_name,)
@@ -231,15 +233,19 @@ class PizzaController:
                 self.view.show_error("Сначала авторизуйтесь")
                 return False
 
+            # Сохраняем заказ в базе данных
             order_data = {
                 'user': self.current_user,
                 'pizza': self.current_pizza if hasattr(self, 'current_pizza') else None,
                 'adult_products': self.adult_products if hasattr(self, 'adult_products') else None
             }
 
+            # Здесь должна быть логика сохранения заказа в БД
+            # ...
 
             self.view.on_order_success(order_data)
 
+            # Очищаем текущий заказ
             if hasattr(self, 'current_pizza'):
                 del self.current_pizza
             if hasattr(self, 'adult_products'):
@@ -265,6 +271,7 @@ class PizzaController:
             admin = Admin()
             table_name = "Products_18" if product_type == "adult" else "Products"
 
+            # Преобразуем значение в правильный тип
             if field == "price":
                 new_value = int(new_value)
             elif field == "count":
