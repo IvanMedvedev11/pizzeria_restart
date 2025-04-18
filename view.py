@@ -80,6 +80,21 @@ class Authorization_Root:
 
         self.Root_ui()
 
+    def set_controller(self, controller):
+        self.controller = controller
+
+    def on_auth_success(self, is_adult):
+        self.is_adult = is_adult
+        self.Choice()
+
+    def show_error(self, message):
+        messagebox.showerror("Ошибка", message)
+
+    def show_success(self, message):
+        messagebox.showinfo("Успех", message)
+
+    def show_admin_panel(self):
+        pass
     def is_over_18(self):
         if not re.fullmatch(self.date_pattern, self.birthday_var.get()):
             return False
@@ -123,6 +138,7 @@ class Authorization_Root:
         self.btn_Confirm.place(x=230, y=290)
 
     def validate_and_continue(self):
+
         if not all([self.name_var.get(), self.last_name_var.get(), self.birthday_var.get()]):
             messagebox.showerror("Ошибка", "Все поля должны быть заполнены!")
             return
