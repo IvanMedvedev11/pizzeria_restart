@@ -1,5 +1,4 @@
 import hashlib
-import hashlib
 import sqlite3
 class FileManager:
     def __init__(self):
@@ -18,15 +17,12 @@ class FileManager:
                 count INTEGER
                 )''')
         self.connection.commit()
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Products_18 (
-                        name TEXT NOT NULL,
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Products_18+ (
+                        name TEXT IS NOT NULL,
                         price INTEGER,
                         count INTEGER
                         )''')
         self.connection.commit()
-    def save_txt(self, filename, logs):
-        with open(filename, 'w') as file:
-            file.write(logs)
 class User:
     def __init__(self):
         self.databaser = FileManager()
@@ -77,4 +73,3 @@ class Admin:
             return "Ингредиента не существует"
         self.databaser.cursor.execute(f'''UPDATE {table_name} SET {stat} = ? WHERE name = ?''', (to_change, ingredient))
         self.databaser.connection.commit()
-
